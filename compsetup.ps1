@@ -3,6 +3,10 @@
     #rename computer?
     $confirmRenamePC=Get-Confirmation("Rename Computer?")
 
+    #add machine to domain?
+    $confirmDomainAdd=Get-Confirmation("Add computer to domain?")
+
+
     #create local admin account?
     $confirmCreateLocalAdmin=Get-Confirmation("Create Local Admin Account?")
 
@@ -17,7 +21,12 @@
     
 
     #execute Functions
-    if($confirmRenamePC){Set-ComputerName} #renames pc
+    if($confirmDomainAdd){
+        $NewDomainName = Read-Host("Fully qualified domain name? (eg. Contoso.local)")
+        Set-ComputerName -domain $NewDomainName
+        }
+    elseif($confirmRenamePC){Set-ComputerName} #renames pc
+    
     if($confirmCreateLocalAdmin){New-LocalAdmin} #creates pcsadmin
     if($confirmInstallChocolatey){Install-Chocolatey} #installs chocolatey
     if($confirmPrivacyDownload){Get-PrivacyScript}
@@ -76,7 +85,7 @@ BEGIN { #backend functions and settings
             [String] $domain = $null
         )
     
-            if ($domainname) { #if domain specified, rename and add to domain
+            if ($domain) { #if domain specified, rename and add to domain
                 $Credential = (Get-Credential -Message ('Enter Domain Admin credentials for domain ' + $domain + '.'))
                 Write-Host("Renaming Computer to " + $hostname + " and adding it go domain " + $domain + " .")
                 Add-Computer -Domain $domain -NewName $hostname -Credential $Credential
