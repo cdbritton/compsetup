@@ -1,42 +1,4 @@
-﻿PROCESS {
-
-    #rename computer?
-    $confirmRenamePC=Get-Confirmation("Rename Computer?")
-
-    #add machine to domain?
-    $confirmDomainAdd=Get-Confirmation("Add computer to domain?")
-
-
-    #create local admin account?
-    $confirmCreateLocalAdmin=Get-Confirmation("Create Local Admin Account?")
-
-    #install chocolatey framework?
-    $confirmInstallChocolatey=Get-Confirmation("Install Chocolatey Framework?")
-    
-    #install chocolatey apps?
-    if($confirmInstallChocolatey){$chocoApps=Read-Host("Install what chocolately packages?`n[eg 'googlechrome;adobereader']`n[Leave blank to continue without installing]")}
-
-    #download Privacy Script?
-    $confirmPrivacyDownload=Get-Confirmation("Download Privacy Script? [You will have the chance to reject installing this later.]")
-    
-
-    #execute Functions
-    if($confirmDomainAdd){
-        $NewDomainName = Read-Host("Fully qualified domain name? (eg. Contoso.local)")
-        Set-ComputerName -domain $NewDomainName
-        }
-    elseif($confirmRenamePC){Set-ComputerName} #renames pc
-    
-    if($confirmCreateLocalAdmin){New-LocalAdmin} #creates pcsadmin
-    if($confirmInstallChocolatey){Install-Chocolatey} #installs chocolatey
-    if($confirmPrivacyDownload){Get-PrivacyScript}
-    if(($chocoApps -ne "")-and($chocoApps -ne $null)){choco install $chocoApps -n} #installs chocolatey apps
-    Set-PowerSettings #sets power settings
-    Set-TimeZone "Eastern Standard Time" -verbose #sets timezone
-
-}
-
-BEGIN { #backend functions and settings
+﻿BEGIN { #backend functions and settings
 
     Clear-Host
     
@@ -212,6 +174,43 @@ BEGIN { #backend functions and settings
         }
     }
     #endregion Application Automation
+}
+
+PROCESS {
+
+    #rename computer?
+    $confirmRenamePC=Get-Confirmation("Rename Computer?")
+
+    #add machine to domain?
+    $confirmDomainAdd=Get-Confirmation("Add computer to domain?")
+
+    #create local admin account?
+    $confirmCreateLocalAdmin=Get-Confirmation("Create Local Admin Account?")
+
+    #install chocolatey framework?
+    $confirmInstallChocolatey=Get-Confirmation("Install Chocolatey Framework?")
+    
+    #install chocolatey apps?
+    if($confirmInstallChocolatey){$chocoApps=Read-Host("Install what chocolately packages?`n[eg 'googlechrome;adobereader']`n[Leave blank to continue without installing]")}
+
+    #download Privacy Script?
+    $confirmPrivacyDownload=Get-Confirmation("Download Privacy Script? [You will have the chance to reject installing this later.]")
+    
+
+    #execute Functions
+    if($confirmDomainAdd){
+        $NewDomainName = Read-Host("Fully qualified domain name? (eg. Contoso.local)")
+        Set-ComputerName -domain $NewDomainName
+        }
+    elseif($confirmRenamePC){Set-ComputerName} #renames pc
+    
+    if($confirmCreateLocalAdmin){New-LocalAdmin} #creates pcsadmin
+    if($confirmInstallChocolatey){Install-Chocolatey} #installs chocolatey
+    if($confirmPrivacyDownload){Get-PrivacyScript}
+    if(($chocoApps -ne "")-and($chocoApps -ne $null)){choco install $chocoApps -n} #installs chocolatey apps
+    Set-PowerSettings #sets power settings
+    Set-TimeZone "Eastern Standard Time" -verbose #sets timezone
+
 }
 
 END {
