@@ -43,10 +43,10 @@
 
     Function Set-ComputerName { #renames computer and adds to domain if specified
         param(
-            [String] $hostname = (Read-Host('New Hostname for computer? [leave blank to skip rename] : ')),
-            [String] $domain = (Read-Host('Domain name to join? [leave blank to skip domain join] : '))
+            [String] $hostname = (Read-Host('New Hostname for computer? [leave blank to skip rename]')),
+            [String] $domain = (Read-Host('Domain name to join? [leave blank to skip domain join]'))
         )
-            if (($null -eq $hostname) -or ($hostname -eq '')) {break}
+            if (($null -eq $hostname) -or ($hostname -eq '')) {return}
             
             elseif (!($null -eq $domain) -or ($domain -eq'')) { #if domain specified, rename and add to domain
                 $Credential = (Get-Credential -Message ('Enter Domain Admin credentials for domain ' + $domain + '.'))
@@ -59,7 +59,7 @@
                 Rename-Computer $hostname
             }
 
-            else {break}
+            else {return}
     }
 
     Function New-LocalAdmin { #creates Local Administrator account
@@ -81,7 +81,7 @@
         #>
     
         param(
-            [String] $UserName = (Read-Host -Prompt "Enter Name for new Local Admin account [leave blank to skip]: "),
+            [String] $UserName = (Read-Host -Prompt "Enter Name for new Local Admin account [leave blank to skip]"),
             [SecureString] $PassWord,
             [String] $Description
         )
@@ -192,7 +192,7 @@ PROCESS {
 
     #install chocolatey apps?
     $chocoApps=Read-Host("Install what chocolately packages?`n[eg 'googlechrome;adobereader']`n[Leave blank to continue without installing]")
-    if(!($null -eq $chocoApps)-and($chocoApps -eq '')){
+    if(!($null -eq $chocoApps)-or($chocoApps -eq '')){
         Install-Chocolatey
         choco install $chocoApps -n #installs chocolatey apps
         choco upgrade all -y -f #forces install/upgrade of installed apps
