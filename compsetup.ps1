@@ -24,7 +24,7 @@
         [String] $answer = (Read-Host($prompt + ' [y/n]')) #get 'y' or 'n' response from user
         )
         
-        While (!(($answer -eq 'y') -or ($answer -eq 'n'))){ #variable validation, reject all but 'y' and 'no'
+        While (!(($answer -eq 'y') -or ($answer -eq 'n'))){ #variable validation, reject all but 'y', 'n' 
             $answer = (Read-Host($prompt + ' [y/n]'))
         }
     
@@ -43,20 +43,23 @@
 
     Function Set-ComputerName { #renames computer and adds to domain if specified
         param(
-            [String] $hostname = (Read-Host('New Hostname for computer?')),
-            [String] $domain = $null
+            [String] $hostname = (Read-Host('New Hostname for computer? [leave blank to skip rename] : ')),
+            [String] $domain = (Read-Host('Domain name to join? [leave blank to skip domain join] : '))
         )
-    
-            if ($domain) { #if domain specified, rename and add to domain
+            if (($null -eq $hostname) -or ($hostname -eq '')) {break}
+            
+            elseif (!($null -eq $domain) -or ($domain -eq'')) { #if domain specified, rename and add to domain
                 $Credential = (Get-Credential -Message ('Enter Domain Admin credentials for domain ' + $domain + '.'))
                 Write-Host("Renaming Computer to " + $hostname + " and adding it go domain " + $domain + " .")
                 Add-Computer -Domain $domain -NewName $hostname -Credential $Credential
             }
     
-            else { #if domain not specified, rename computer
+            elseif ($hostname) { #if domain not specified, rename computer
                 Write-Host("Renaming Computer to: " + $hostname)
                 Rename-Computer $hostname
             }
+
+            else {break}
     }
 
     Function New-LocalAdmin { #creates Local Administrator account
@@ -78,28 +81,30 @@
         #>
     
         param(
-            [String] $UserName = (Read-Host -Prompt "Enter Name for new Admin account"),
+            [String] $UserName = (Read-Host -Prompt "Enter Name for new Local Admin account [leave blank to skip]: "),
             [SecureString] $PassWord,
             [String] $Description
         )
-    
-        #parameter validation
-        if (!(get-localuser -name $UserName -ErrorAction Ignore)) {
-    
-            if (!($PassWord)) {
-                $pwd1_text = '1'
-                $pwd2_text = '2'
-                While ( $pwd1_text -ne $pwd2_text ) {
-                    $PassWord = Read-Host -AsSecureString ("Enter password for " + $UserName)
-                    $PassWord2 = Read-Host -AsSecureString ("Re-Enter password for " + $UserName)
-                    $pwd1_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($PassWord))
-                    $pwd2_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($PassWord2))
+        
+        if(!(($UserName -eq '') -or ($null -eq $UserName))) {
+            #parameter validation
+            if (!(get-localuser -name $UserName -ErrorAction Ignore)) {
+        
+                if (!($PassWord)) {
+                    $pwd1_text = '1'
+                    $pwd2_text = '2'
+                    While ( $pwd1_text -ne $pwd2_text ) {
+                        $PassWord = Read-Host -AsSecureString ("Enter password for " + $UserName)
+                        $PassWord2 = Read-Host -AsSecureString ("Re-Enter password for " + $UserName)
+                        $pwd1_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($PassWord))
+                        $pwd2_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($PassWord2))
+                    }
                 }
+        
+                #execute command
+                New-LocalUser -Name $UserName -Password $PassWord -Description $Description -PasswordNeverExpires
+                Add-LocalGroupMember -Group Administrators -Member $UserName
             }
-    
-            #execute command
-            New-LocalUser -Name $UserName -Password $PassWord -Description $Description -PasswordNeverExpires
-            Add-LocalGroupMember -Group Administrators -Member $UserName
         }
     }
 
@@ -145,7 +150,9 @@
         #Installs SolarWinds Agent
         
             #Search for Agent executable
-            $AppUserPath = Resolve-Path ".\*WindowsAgentSetup.exe"
+            $profileFolder = [environment]::getfolderpath("UserProfile")
+            $DownloadsFolder = ("" + $profileFolder + "\Downloads")
+            $AppUserPath = Resolve-Path ("" + $DownloadsFolder + "\*WindowsAgentSetup.exe")
         
             #If valid exe found, execute it
             If (Test-Path $AppUserPath)
@@ -177,44 +184,25 @@
 }
 
 PROCESS {
-
-    #rename computer?
-    $confirmRenamePC=Get-Confirmation("Rename Computer?")
-
-    #add machine to domain?
-    $confirmDomainAdd=Get-Confirmation("Add computer to domain?")
-
-    #create local admin account?
-    $confirmCreateLocalAdmin=Get-Confirmation("Create Local Admin Account?")
-
-    #install chocolatey framework?
-    $confirmInstallChocolatey=Get-Confirmation("Install Chocolatey Framework?")
-    
-    #install chocolatey apps?
-    if($confirmInstallChocolatey){$chocoApps=Read-Host("Install what chocolately packages?`n[eg 'googlechrome;adobereader']`n[Leave blank to continue without installing]")}
-
-    #download Privacy Script?
-    $confirmPrivacyDownload=Get-Confirmation("Download Privacy Script? [You will have the chance to reject installing this later.]")
-    
-
-    #execute Functions
-    if($confirmDomainAdd){
-        $NewDomainName = Read-Host("Fully qualified domain name? (eg. Contoso.local)")
-        Set-ComputerName -domain $NewDomainName
-        }
-    elseif($confirmRenamePC){Set-ComputerName} #renames pc
-    
-    if($confirmCreateLocalAdmin){New-LocalAdmin} #creates pcsadmin
-    if($confirmInstallChocolatey){Install-Chocolatey} #installs chocolatey
-    if($confirmPrivacyDownload){Get-PrivacyScript}
-    if(($chocoApps -ne "")-and($chocoApps -ne $null)){choco install $chocoApps -n} #installs chocolatey apps
+    #region Execution
+    Set-ComputerName #rename computer
+    New-LocalAdmin
     Set-PowerSettings #sets power settings
     Set-TimeZone "Eastern Standard Time" -verbose #sets timezone
 
-}
+    #install chocolatey apps?
+    $chocoApps=Read-Host("Install what chocolately packages?`n[eg 'googlechrome;adobereader']`n[Leave blank to continue without installing]")
+    if(!($null -eq $chocoApps)-and($chocoApps -eq '')){
+        Install-Chocolatey
+        choco install $chocoApps -n #installs chocolatey apps
+        choco upgrade all -y -f #forces install/upgrade of installed apps
+    }
 
-END {
-
+    #download Privacy Script?
+    #$confirmPrivacyDownload=Get-Confirmation("Download Privacy Script? [You will have the chance to reject installing this later.]")
+    #endregion Execution
+    
+    #region Finalize
     #output errors in easy to read format
     $Error | Out-GridView
 
@@ -222,5 +210,5 @@ END {
     $confirmRestartPC=Get-Confirmation("Script Finished. Restart PC?")
     if($confirmRestartPC){Restart-Computer}
     else{exit}
-
+    #endregion Finalize
 }
