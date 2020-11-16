@@ -48,7 +48,7 @@
         )
             if (($null -eq $hostname) -or ($hostname -eq '')) {break}
             
-            elseif (!($null -eq $domain) -or ($domain -eq'')) { #if domain specified, rename and add to domain
+            elseif (!(($null -eq $domain) -or ($domain -eq ''))) { #if domain specified, rename and add to domain
                 $Credential = (Get-Credential -Message ('Enter Domain Admin credentials for domain ' + $domain + '.'))
                 Write-Host("Renaming Computer to " + $hostname + " and adding it go domain " + $domain + " .")
                 Add-Computer -Domain $domain -NewName $hostname -Credential $Credential
@@ -58,8 +58,6 @@
                 Write-Host("Renaming Computer to: " + $hostname)
                 Rename-Computer $hostname
             }
-
-            else {return}
     }
 
     Function New-LocalAdmin { #creates Local Administrator account
