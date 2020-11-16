@@ -46,7 +46,7 @@
             [String] $hostname = (Read-Host('New Hostname for computer? [leave blank to skip rename]')),
             [String] $domain = (Read-Host('Domain name to join? [leave blank to skip domain join]'))
         )
-            if (($null -eq $hostname) -or ($hostname -eq '')) {return}
+            if (($null -eq $hostname) -or ($hostname -eq '')) {break}
             
             elseif (!($null -eq $domain) -or ($domain -eq'')) { #if domain specified, rename and add to domain
                 $Credential = (Get-Credential -Message ('Enter Domain Admin credentials for domain ' + $domain + '.'))
