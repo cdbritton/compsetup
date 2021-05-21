@@ -187,6 +187,7 @@ PROCESS {
     New-LocalAdmin
     Set-PowerSettings #sets power settings
     Set-TimeZone "Eastern Standard Time" -verbose #sets timezone
+    New-Item -Path "C:\" -Name "PhoenixCS" -ItemType Directory
 
     #install chocolatey apps?
     $chocoApps=Read-Host("Install what chocolately packages?`n[eg 'googlechrome;adobereader']`n[Leave blank to continue without installing]")
@@ -207,6 +208,6 @@ PROCESS {
     #restart pc or exit script
     $confirmRestartPC=Get-Confirmation("Script Finished. Restart PC?")
     if($confirmRestartPC){Restart-Computer}
-    else{exit}
+    else(start-process explorer.exe 'C:\PhoenixCS')
     #endregion Finalize
 }
