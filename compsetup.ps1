@@ -45,10 +45,8 @@
         param(
             [String] $hostname = (Read-Host('New Hostname for computer? [leave blank to skip rename]')),
             [String] $domain = (Read-Host('Domain name to join? [leave blank to skip domain join]'))
-        )
-            if (($null -eq $hostname) -or ($hostname -eq '')) {break}
-            
-            elseif (!(($null -eq $domain) -or ($domain -eq ''))) { #if domain specified, rename and add to domain
+        )            
+            if (!(($null -eq $domain) -or ($domain -eq ''))) { #if domain specified, rename and add to domain
                 $Credential = (Get-Credential -Message ('Enter Domain Admin credentials for domain ' + $domain + '.'))
                 Write-Host("Renaming Computer to " + $hostname + " and adding it go domain " + $domain + " .")
                 Add-Computer -Domain $domain -NewName $hostname -Credential $Credential
@@ -208,6 +206,6 @@ PROCESS {
     #restart pc or exit script
     $confirmRestartPC=Get-Confirmation("Script Finished. Restart PC?")
     if($confirmRestartPC){Restart-Computer}
-    else(start-process explorer.exe 'C:\PhoenixCS')
+    else {start-process explorer.exe 'C:\PhoenixCS'}
     #endregion Finalize
 }
