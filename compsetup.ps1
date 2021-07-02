@@ -48,7 +48,7 @@
         )            
             if (!(($null -eq $domain) -or ($domain -eq ''))) { #if domain specified, rename and add to domain
                 $Credential = (Get-Credential -Message ('Enter Domain Admin credentials for domain ' + $domain + '.'))
-                Write-Host("Renaming Computer to " + $hostname + " and adding it go domain " + $domain + " .")
+                Write-Host("Renaming Computer to " + $hostname + " and adding it to domain " + $domain + " .")
                 Add-Computer -Domain $domain -NewName $hostname -Credential $Credential
             }
     
@@ -127,6 +127,14 @@
         Write-Host("Power settings applied.") -ForegroundColor Yellow -BackgroundColor Black
     }
 
+    Function Create-PhoenixCSFolder {
+        New-Item -Path "C:\" -Name "PhoenixCS" -ItemType Directory
+        $Acl = Get-Acl "C:\PhoenixCS"
+        $Ar = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone", "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
+        $Acl.SetAccessRule($Ar)
+        Set-Acl "C:\PhoenixCS" $Acl
+    }
+
     #endregion Local PC Settings
 
     #region Application Automation
@@ -185,7 +193,7 @@ PROCESS {
     New-LocalAdmin
     Set-PowerSettings #sets power settings
     Set-TimeZone "Eastern Standard Time" -verbose #sets timezone
-    New-Item -Path "C:\" -Name "PhoenixCS" -ItemType Directory
+    Create-PhoenixCSFolder
 
     #install chocolatey apps?
     $chocoApps=Read-Host("Install what chocolately packages?`n[eg 'googlechrome;adobereader']`n[Leave blank to continue without installing]")
