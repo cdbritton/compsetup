@@ -127,12 +127,17 @@
         Write-Host("Power settings applied.") -ForegroundColor Yellow -BackgroundColor Black
     }
 
-    Function Create-PhoenixCSFolder {
-        New-Item -Path "C:\" -Name "PhoenixCS" -ItemType Directory
-        $Acl = Get-Acl "C:\PhoenixCS"
-        $Ar = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone", "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
+    Function Set-Permissions {
+        param(
+            [string]$directory = (Read-Host("Directory?")),
+            [string]$user = (Read-Host("Username?")),
+            [string]$permissions = (Read-Host("Permissions Level?")),
+            [string]$type = (Read-Host("Allow or Deny?"))
+        )
+        $Acl = Get-Acl $directory
+        $Ar = New-Object System.Security.AccessControl.FileSystemAccessRule($user, $permissions, "ContainerInherit,ObjectInherit", "None", $type)
         $Acl.SetAccessRule($Ar)
-        Set-Acl "C:\PhoenixCS" $Acl
+        Set-Acl $directory $Acl
     }
 
     #endregion Local PC Settings
@@ -193,7 +198,8 @@ PROCESS {
     New-LocalAdmin
     Set-PowerSettings #sets power settings
     Set-TimeZone "Eastern Standard Time" -verbose #sets timezone
-    Create-PhoenixCSFolder
+    New-Item -Path "C:\" -Name "PhoenixCS" -ItemType Directory
+    Set-Permissions -directory "C:\Users\Public\Desktop" -user "Everyone" -permissions "FullControl" -type "Allow"
 
     #install chocolatey apps?
     $chocoApps=Read-Host("Install what chocolately packages?`n[eg 'googlechrome;adobereader']`n[Leave blank to continue without installing]")
